@@ -1,1 +1,1 @@
-# -dynamic-zakat-tracker
+dynamic-zakat-tracker
