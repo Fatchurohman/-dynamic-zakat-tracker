@@ -360,19 +360,38 @@
         });
 
         async function fetchGoldPrice() {
-            const statusEl = document.getElementById('goldUpdateStatus');
-            statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 animate-ping inline-block"></span> Memuat...`;
+    const statusEl = document.getElementById('goldUpdateStatus');
+    statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 animate-ping inline-block"></span> Memuat...`;
 
-            try {
-                goldPrice = 1350000; 
-                nisabLimit = goldPrice * 85;
-                updateGoldUI();
-                statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> API Terhubung`;
-            } catch (error) {
-                statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span> Mode Offline`;
-                updateGoldUI();
-            }
+    try {
+        // Mengambil data harga emas Antam terkini dari API publik
+        const response = await fetch('https://logam-mulia-api.vercel.app/prices/harga-emas-hari-ini');
+        
+        if (!response.ok) throw new Error("Gagal mengambil data API");
+
+        const result = await response.json();
+        
+        // Mengambil harga per gram dari respons API
+        if (result && result.data && result.data.price) {
+            goldPrice = result.data.price;
+        } else {
+            // Fallback jika format data API berubah
+            goldPrice = 1400000; 
         }
+
+        nisabLimit = goldPrice * 85;
+        updateGoldUI();
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> API Terhubung`;
+    } catch (error) {
+        // Jika koneksi internet/API gagal, gunakan nilai estimasi cadangan (fallback)
+        console.warn("Gagal mengambil harga realtime, menggunakan harga estimasi:", error);
+        goldPrice = 1400000; 
+        nisabLimit = goldPrice * 85;
+        updateGoldUI();
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span> Mode Offline`;
+    }
+}
+
 
         function updateGoldUI() {
             document.getElementById('goldPriceText').innerHTML = `Rp ${goldPrice.toLocaleString('id-ID')} <span class="text-xs text-slate-400 font-normal">/g</span>`;
