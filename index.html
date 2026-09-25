@@ -364,30 +364,32 @@
     statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 animate-ping inline-block"></span> Memuat...`;
 
     try {
-        // Mengambil data harga emas dari API publik terbaru
-        const response = await fetch('https://raw.githubusercontent.com/fatur62/gold-price-api/main/harga-emas.json');
+        // Mengambil data harga emas IDR dari API Ekonomi Publik (Exchange Rates / Metals API)
+        const response = await fetch('https://api.exchangerate-api.com/v4/latest/XAU');
         
-        if (!response.ok) throw new Error("Gagal mengambil data API");
+        if (!response.ok) throw new Error("Gagal mengambil data API pasar");
 
         const result = await response.json();
         
-        if (result && result.price) {
-            goldPrice = parseInt(result.price, 10);
+        // 1 troy ounce = 31.1034768 gram
+        // Menghitung harga IDR per gram emas dunia (estimasi pasar Antam)
+        if (result && result.rates && result.rates.IDR) {
+            const pricePerOunceIDR = result.rates.IDR;
+            goldPrice = Math.round(pricePerOunceIDR / 31.1034768);
         } else {
-            // Standard fallback harga emas terkini (~2.6 Juta)
-            goldPrice = 2600000; 
+            goldPrice = 2600000; // Standar September 2026
         }
 
         nisabLimit = goldPrice * 85;
         updateGoldUI();
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> API Terhubung`;
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> API Realtime Live`;
     } catch (error) {
-        // Jika koneksi gagal, langsung gunakan standar estimasi emas terbaru (Rp 2.600.000/gram)
-        console.warn("Gagal mengambil API harga emas realtime, menggunakan nilai estimasi terbaru:", error);
+        // Backup alternatif jika API pasar internasional gagal
+        console.warn("Menggunakan data estimasi lokal:", error);
         goldPrice = 2600000; 
         nisabLimit = goldPrice * 85;
         updateGoldUI();
-        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span> Mode Standar (2.6M)`;
+        statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span> Mode Standar`;
     }
 }
 
