@@ -324,7 +324,14 @@
             return `${parts[2]}-${parts[1]}-${parts[0]}`;
         }
 
-        // Konversi Hijriah Menggunakan Intl API Presisi
+        // Mapping Nama Bulan Hijriah Baku
+        const islamicMonthsID = [
+            "Muharram", "Safar", "Rabi'ul Awwal", "Rabi'ul Akhir",
+            "Jumadil Awwal", "Jumadil Akhir", "Rajab", "Sya'ban",
+            "Ramadan", "Syawal", "Zulqa'dah", "Zulhijjah"
+        ];
+
+        // Konversi Hijriah Presisi dengan Nama Bulan Bahasa Indonesia
         function convertToHijri(gregorianDateStr) {
             if (!gregorianDateStr) return "";
             try {
@@ -332,14 +339,24 @@
                 if (parts.length !== 3) return "";
                 const gDate = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
                 
-                const formatter = new Intl.DateTimeFormat('id-TN-u-ca-islamic-umalqura', {
+                const formatter = new Intl.DateTimeFormat('en-TN-u-ca-islamic-umalqura', {
                     day: 'numeric',
-                    month: 'long',
+                    month: 'numeric',
                     year: 'numeric',
                     timeZone: 'UTC'
                 });
                 
-                return formatter.format(gDate) + " H";
+                const formattedParts = formatter.formatToParts(gDate);
+                let day = "", monthIndex = 0, year = "";
+
+                formattedParts.forEach(p => {
+                    if (p.type === 'day') day = p.value;
+                    if (p.type === 'month') monthIndex = parseInt(p.value, 10) - 1;
+                    if (p.type === 'year') year = p.value;
+                });
+
+                const monthName = islamicMonthsID[monthIndex] || "";
+                return `${day} ${monthName} ${year} H`;
             } catch (e) {
                 return "";
             }
