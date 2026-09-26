@@ -324,45 +324,25 @@
             return `${parts[2]}-${parts[1]}-${parts[0]}`;
         }
 
+        // Konversi Hijriah Menggunakan Intl API Presisi
         function convertToHijri(gregorianDateStr) {
             if (!gregorianDateStr) return "";
-            const gDate = new Date(gregorianDateStr);
-            if (isNaN(gDate.getTime())) return "";
-
-            let day = gDate.getDate();
-            let month = gDate.getMonth();
-            let year = gDate.getFullYear();
-
-            if (month < 2) {
-                year -= 1;
-                month += 12;
+            try {
+                const parts = gregorianDateStr.split('-');
+                if (parts.length !== 3) return "";
+                const gDate = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+                
+                const formatter = new Intl.DateTimeFormat('id-TN-u-ca-islamic-umalqura', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                    timeZone: 'UTC'
+                });
+                
+                return formatter.format(gDate) + " H";
+            } catch (e) {
+                return "";
             }
-
-            let a = Math.floor(year / 100);
-            let b = 2 - a + Math.floor(a / 4);
-            let julianDay = Math.floor(365.25 * (year + 4716)) + Math.floor(30.6001 * (month + 1)) + day + b - 1524.5;
-
-            let z = Math.floor(julianDay - 1948439.5);
-            let cyc = Math.floor((z - 0.5) / 10631);
-            z -= Math.floor(cyc * 10631 + 0.5);
-            let iy = Math.floor((z - 0.5) / 354.366);
-            let hYear = Math.floor(cyc * 30 + iy + 1);
-            let z2 = z - Math.floor(iy * 354.366 + 0.5);
-            let hMonth = Math.floor((z2 / 29.5) + 1);
-            let hDay = Math.ceil(z2 - Math.floor((hMonth - 1) * 29.5));
-
-            if (hMonth > 12) {
-                hMonth -= 12;
-                hYear += 1;
-            }
-
-            const islamicMonths = [
-                "Muharram", "Safar", "Rabi'ul Awwal", "Rabi'ul Akhir",
-                "Jumadil Awwal", "Jumadil Akhir", "Rajab", "Sya'ban",
-                "Ramadan", "Syawal", "Zulqa'dah", "Zulhijjah"
-            ];
-
-            return `${hDay} ${islamicMonths[hMonth - 1]} ${hYear} H`;
         }
 
         const balanceInput = document.getElementById('inputBalance');
